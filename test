@@ -1,0 +1,1 @@
+/give @s dirt{a:1b,b:1b, display:{Name:'[{"text":"","italic":false},{"text":"test"}]'}, Lore:['[{"text":"","italic":false},{"text":"test"}]'] 1
