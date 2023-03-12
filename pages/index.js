@@ -12,26 +12,33 @@ export default function Home() {
   const [command, setCommand] = useState("");
 
   const [nbtTagInputs, setNbtTagInputs] = useState([{ key: "", value: "" }]);
+  const customNbtTags = customNbtTagsKey
+    .reduce(
+      (acc, key, index) => `${acc}${key}:${customNbtTagsValue[index]},`,
+      ""
+    )
+    .slice(0, -1); // remove trailing comma
 
   function generateCommand() {
+    const customNbtTags = customNbtTagsKey
+      .reduce(
+        (acc, key, index) => `${acc}${key}:${customNbtTagsValue[index]},`,
+        ""
+      )
+      .slice(0, -1);
     let fullCommand = `/give ${target} ${itemId}`;
     console.log("customNbtTags: ", customNbtTags);
     if (customNbtTags.length > 0) {
-      fullCommand += "{";
-      customNbtTags.forEach((tag, index) => {
-        fullCommand += tag;
-        if (index !== customNbtTags.length - 1) {
-          fullCommand += ",";
-        }
-      });
-      fullCommand += ",";
+      if (customNbtTags) {
+        fullCommand += ` tag:{${customNbtTags}}`;
+      }
     }
 
     if (customName) {
       fullCommand += ` display:{Name:'[{"text":"","italic":false},{"text":"${customName}"}]',`;
     }
     if (customDescription) {
-      fullCommand += ` Lore:['[{"text":"","italic":false},{"text":"${customDescription}"}]']}}`;
+      fullCommand += ` Lore:['[{"text":"","italic":false},{"text":"${customDescription}"}]']},`;
     }
     if (amount) {
       fullCommand += ` ${amount}`;
@@ -39,20 +46,24 @@ export default function Home() {
     setCommand(fullCommand);
   }
 
-  function copyToClipboard() {
-    navigator.clipboard.writeText(command);
-  }
-
-  function handleNbtTags() {
-    setNbtTags(!nbtTags);
-  }
-
   function handleNbtTagInputChange(index, key, value) {
     console.log("index:", index, " key: ", key, " value: ", value);
+    if (key === "") {
+      /* const value = newInputs.map(({ value }) => value); */
+      setCustomNbtTagsValue((prevValues) => {
+        const updatedValues = [...prevValues];
+        updatedValues[index] = value;
+      });
+    } else if (value === "") {
+      setCustomNbtTagsKey((prevKey) => {
+        const updatedKey = [...prevKey];
+        updatedKey[index] = key;
+      });
+    }
     const newInputs = [...nbtTagInputs];
     newInputs[index] = { key, value };
-    const newTags = newInputs.map(({ key, value }) => `${key}:${value}`);
-    setCustomNbtTags(newTags);
+
+    setCustomNbtTagsKey(newKeys);
   }
 
   function addNbtTagInput() {
@@ -63,6 +74,16 @@ export default function Home() {
     const newInputs = [...nbtTagInputs];
     newInputs.splice(index, 1);
     setNbtTagInputs(newInputs);
+  }
+
+  function handleNbtTags() {
+    setNbtTags(!nbtTags);
+  }
+
+  function copyToClipboard() {
+    const commandInput = document.querySelector("textarea");
+    commandInput.select();
+    document.execCommand("copy");
   }
 
   return (
@@ -94,6 +115,7 @@ export default function Home() {
       <div>
         <label>自訂NBT Tags</label>
         <button onClick={handleNbtTags}>{nbtTags ? "隱藏" : "顯示"}</button>
+
         {nbtTags && (
           <div>
             {nbtTagInputs.map(({ key, value }, index) => (
